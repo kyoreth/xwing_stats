@@ -20,14 +20,14 @@ names <- unique(unlist(unique_names_lists))
 data <- do.call(rbind, lapply(data, function(x) x[names]))
 data.df <- as.data.frame(data)
 
-data.df <- filter(data.df[,c(1,6:10)], size != "Huge")
+data.df <- filter(data.df[,c(1,3,4,6:10)], size != "Huge")
 all.mans <- unique(unlist(data.df$dial))
 
 dial <- do.call(rbind, lapply(1:nrow(data.df), function(x) as.numeric(all.mans %in% unlist(data.df[x,3]))))
 dial.df <- as.data.frame(dial)
 colnames(dial.df) <- all.mans
 
-data.df <- cbind(data.df[,-3], dial.df)
+data.df <- cbind(data.df[,-5], dial.df)
 
 stats <- lapply(1:nrow(data.df), function(x) lapply(data.df[x,]$stats[[1]], function(y) paste(unlist(y), collapse =  " ")))
 unique_stats <- unique(unlist(stats))
@@ -35,7 +35,7 @@ unique_stats <- unique(unlist(stats))
 stats.matrix <- do.call(rbind, lapply(stats, function(x) as.numeric(unique_stats %in% unlist(x))))
 stats.df <- as.data.frame(stats.matrix)
 colnames(stats.df) <- unique_stats
-data.df_stats <- cbind(data.df[,-3], stats.df)
+data.df_stats <- cbind(data.df[,-5], stats.df)
 
 
 actions <- lapply(1:nrow(data.df), function(x) lapply(data.df[x,]$actions[[1]], function(y) paste(unlist(y), collapse =  " ")))
@@ -44,7 +44,7 @@ unique_actions <- unique(unlist(actions))
 actions.matrix <- do.call(rbind, lapply(actions, function(x) as.numeric(unique_actions %in% unlist(x))))
 actions.df <- as.data.frame(actions.matrix)
 colnames(actions.df) <- unique_actions
-data.df_actions <- cbind(data.df_stats[,-3], actions.df)
+data.df_actions <- cbind(data.df_stats[,-5], actions.df)
 
 
 pilot_cols <- lapply(1:nrow(data.df_actions), function(x) colnames(do.call(rbind, data.df_actions[x,]$pilots[[1]])))
@@ -56,11 +56,11 @@ for (i in 1:length(pilots)){
 
 
 final_frame.df <- do.call(rbind, lapply(1:length(pilots), function(x) cbind(pilots[[x]],data.df_actions[x,])))
-final_frame.df <- final_frame.df[,c(-10:-20,-23,-6)]
+final_frame.df <- final_frame.df[,c(-10:-20,-25,-6)]
 
-final_frame.df <- left_join(final_frame.df, as.data.frame(data)[,c("name","faction")], by=c("name.1"="name"))
-final_frame.df <- final_frame.df %>% rename(ship = name.1)
-final_frame.df <- cbind(final_frame.df[c(-"ship")]+final_frame.df[c("ship")])
+# final_frame.df <- left_join(final_frame.df, as.data.frame(data)[,c("name","faction")], by=c("name.1"="name"))
+ final_frame.df <- final_frame.df %>% rename(ship = name.1)
+# final_frame.df <- cbind(final_frame.df[c(-"ship")]+final_frame.df[c("ship")])
 
 ff_slots <- lapply(final_frame.df$slots,unlist)
 u_slots <- unique(unlist(ff_slots))
@@ -104,11 +104,11 @@ test.df$agility <- do.call("rbind", lapply(1:nrow(test.df), \(x) max((final_fram
 # training <- test.df[id_training,]
 # testing <- test.df[-id_training,]
 
-
+final_frame.df <- final_frame.df %>% select(-ffg)
 
 ffnames <- final_frame.df %>% clean_names() %>% names()
-ffnames[c(5:8,168)] <- ffnames[c(5:8,168)] %>% paste("_cat",sep = "")
-ffnames[c(9:167,169:185)] <- ffnames[c(9:167,169:185)] %>% paste("_bin",sep = "")
+ffnames[c(5:9)] <- ffnames[c(5:9)] %>% paste("_cat",sep = "")
+ffnames[c(10:185)] <- ffnames[c(10:185)] %>% paste("_bin",sep = "")
 names(final_frame.df) <- ffnames
 
 final_frame.df$ability_cat <- final_frame.df$ability_cat %>% as.character()
@@ -272,5 +272,9 @@ pred_frame.df <- final_frame.df %>%
 ggplotly(ggplot(pred_frame.df, aes(x=cost, y=pred, colour=faction_cat, name=name))+geom_point()+geom_abline())
 
 ggplot(pred_frame.df, aes(y=diff))+geom_boxplot()+facet_wrap(faction_cat~.)
+
+
+
+
 
          
